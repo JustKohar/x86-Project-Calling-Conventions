@@ -72,7 +72,7 @@ ebp_box = PointerBox(350, 400, 100, 40, "EBP")
 pointer_boxes = [esp_box, eip_box, ebp_box]
 
 # Draw static arrows next to the boxes
-def draw_static_arrow(screen, box, direction="right"):
+def draw_static_arrow(screen, box, direction="down"):
     """Draw a static arrow next to a box."""
     if direction == "right":
         start = (box.rect.right + 10, box.rect.centery)
@@ -90,13 +90,13 @@ def draw_static_arrow(screen, box, direction="right"):
     # Draw the arrow line
     pygame.draw.line(screen, BLACK, start, end, 2)
 
-    # Draw the arrowhead (optional)
+    # Draw the arrowhead
     dx, dy = end[0] - start[0], end[1] - start[1]
     angle = pygame.math.Vector2(dx, dy).angle_to((1, 0))
     arrow_length = 10
     arrow_points = [
         end,
-        (end[0] + arrow_length, end[1] + arrow_length // 2),
+        (end[0] - arrow_length, end[1] - arrow_length // 2),
         (end[0] + arrow_length, end[1] - arrow_length // 2),
     ]
     pygame.draw.polygon(screen, BLACK, arrow_points)
@@ -191,35 +191,41 @@ while running:
         screen.blit(text_surface, (button_rect.x + 10, button_rect.y + 10))
 
     # Draw stack frames
-    stack_x, stack_y = 400, 500  # Starting position for the first frame
-    frame_height = 60  # Reduced height for smaller text
-    vertical_spacing = 80  # Reduced spacing for smaller text
+    stack_x, stack_y = 400, SCREEN_HEIGHT - 100  # Adjust starting position for the first frame at the bottom
+    frame_width = 180  # Reduced width for each frame
+    horizontal_spacing = 180  # Increased spacing between frames
+    frame_height = 60  # Height for each frame
 
     for frame in cpu.stack:
+        # Draw the frame box with a smaller red border
+        pygame.draw.rect(screen, RED, (stack_x, stack_y, frame_width, frame_height), 1)  # Red border with thickness 1
+        
+        text_x = stack_x + 5  # Adjust horizontal position for smaller text
         text_y = stack_y + 5  # Adjust vertical position for smaller text
         for key, value in frame.__dict__.items():
             if key != "inactive":
                 text_surface = small_font.render(f"{key}: {value}", True, BLACK)  # Use small_font
-                screen.blit(text_surface, (stack_x + 5, text_y))  # Adjust horizontal position
+                screen.blit(text_surface, (text_x, text_y))  # Adjust horizontal position
                 text_y += 15  # Adjust line spacing for smaller text
-        stack_y -= vertical_spacing  # Move up for the next frame
+        stack_x += horizontal_spacing  # Move right for the next frame
 
     # Draw registers
-    register_x, register_y = 50, 300
+    register_x, register_y = 50, SCREEN_HEIGHT - 200  # Adjust starting position for registers at the bottom
     for reg, value in cpu.registers.items():
         text_surface = large_font.render(f"{reg}: {value}", True, BLACK)
         screen.blit(text_surface, (register_x, register_y))
         register_y += 40
 
+            
     # Draw pointer boxes
     for box in pointer_boxes:
         box.draw(screen, large_font)
 
     # Draw static arrows next to the boxes
-    draw_static_arrow(screen, esp_box, direction="right")
-    draw_static_arrow(screen, eip_box, direction="right")
-    draw_static_arrow(screen, ebp_box, direction="right")
-
+    draw_static_arrow(screen, esp_box, direction="down")
+    draw_static_arrow(screen, eip_box, direction="down")
+    draw_static_arrow(screen, ebp_box, direction="down")
+    
     # Update the display
     pygame.display.flip()
 
