@@ -126,10 +126,14 @@ while running:
                 if button_rect.collidepoint(event.pos):
                     if button_name == "Push":
                         if input_text:
+                            # Save previous EAX value to EDX
+                            cpu.registers["EDX"] = cpu.registers["EAX"]
                             frame = StackFrame(input_text, [], {})
                             cpu.push_stack_frame(frame)
                             input_text = ""
                     elif button_name == "Pop":
+                        # Save previous EAX value to EDX
+                        cpu.registers["EDX"] = cpu.registers["EAX"]
                         cpu.pop_stack_frame()
                     elif button_name == "Clear":
                         cpu.stack.clear()
@@ -137,6 +141,8 @@ while running:
                     elif button_name == "Call":
                         if input_text:
                             try:
+                                # Save previous EAX value to EDX
+                                cpu.registers["EDX"] = cpu.registers["EAX"]
                                 # Handle hexadecimal input (e.g., "0x1034")
                                 if input_text.startswith("0x"):
                                     args = [int(input_text, 16)]  # Convert hex to integer
@@ -147,18 +153,28 @@ while running:
                             except ValueError:
                                 print("Invalid input. Please enter a valid number or hexadecimal value.")
                     elif button_name == "Ret":
+                        # Save previous EAX value to EDX
+                        cpu.registers["EDX"] = cpu.registers["EAX"]
                         cpu.return_from_function()
                     elif button_name == "Set EBX":
                         if input_text:
+                            # Save previous EAX value to EDX (optional for this operation)
+                            cpu.registers["EDX"] = cpu.registers["EAX"]
                             cpu.registers["EBX"] = int(input_text, 16)  # Set EBX to the input value
                             input_text = ""
                     elif button_name == "Loop":
                         if input_text:
+                            # Save previous EAX value to EDX
+                            cpu.registers["EDX"] = cpu.registers["EAX"]
                             iterations = int(input_text)
+                            # Set ECX to the number of loops
+                            cpu.registers["ECX"] = iterations
                             cpu.simulate_loop(iterations)
                             input_text = ""
                     elif button_name == "Multiply":
                         if input_text:
+                            # Save previous EAX value to EDX
+                            cpu.registers["EDX"] = cpu.registers["EAX"]
                             args = list(map(int, input_text.split()))  # Convert input to integers
                             cpu.multiply(args[0], args[1])
                             input_text = ""
@@ -168,6 +184,8 @@ while running:
             if active:
                 if event.key == pygame.K_RETURN:
                     if input_text:
+                        # Save previous EAX value to EDX
+                        cpu.registers["EDX"] = cpu.registers["EAX"]
                         frame = StackFrame(input_text, [], {})
                         cpu.push_stack_frame(frame)
                         input_text = ""

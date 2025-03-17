@@ -16,6 +16,8 @@ class CPU:
 
     def push_stack_frame(self, frame):
         """Push a new stack frame onto the stack."""
+        # Store previous EAX value in EDX
+        self.registers["EDX"] = self.registers["EAX"]
         self.stack.append(frame)
         # Update EAX with the address of the new frame
         self.registers["EAX"] = frame.return_address
@@ -24,6 +26,8 @@ class CPU:
         """Pop the top stack frame from the stack."""
         if not self.stack:
             return None
+        # Store previous EAX value in EDX
+        self.registers["EDX"] = self.registers["EAX"]
         popped_frame = self.stack.pop()
         # Update EAX with the return address of the popped frame
         self.registers["EAX"] = popped_frame.return_address
@@ -31,6 +35,8 @@ class CPU:
     
     def call_function(self, function_name, parameters):
         """Simulate a function call."""
+        # Store previous EAX value in EDX
+        self.registers["EDX"] = self.registers["EAX"]
         return_address = f"0x{len(self.stack) + 1:04X}"  # Generate a unique return address
         local_vars = {}
         frame = StackFrame(return_address, parameters, local_vars)
@@ -41,7 +47,7 @@ class CPU:
             result = parameters[0] + parameters[1] if len(parameters) > 1 else parameters[0]
             self.registers["EAX"] = result  # Store the result in EAX
         elif function_name == "subtract":
-            result = parameters[0] + parameters[1] if len(parameters) > 1 else parameters[0]
+            result = parameters[0] - parameters[1] if len(parameters) > 1 else parameters[0]
             self.registers["EAX"] = result  # Store the result in EAX
         elif function_name == "multiply":
             self.multiply(parameters[0], parameters[1])
@@ -50,16 +56,28 @@ class CPU:
 
     def multiply(self, a, b):
         """Simulate multiplication using EAX and EDX."""
+        # Store previous EAX value in EDX
+        self.registers["EDX"] = self.registers["EAX"]
         result = a * b  # Perform multiplication
         self.registers["EAX"] = result & 0xFFFFFFFF  # Lower 32 bits
-        self.registers["EDX"] = (result >> 32) & 0xFFFFFFFF  # Upper 32 bits
+        self.registers["EDX"] = (result >> 32) & 0xFFFFFFFF  # Upper 32 bits for high bits of multiplication
     
     def simulate_loop(self, iterations):
         """Simulate a loop using ECX as a counter."""
+        # Set ECX to the number of iterations (loops played)
         self.registers["ECX"] = iterations
-        while self.registers["ECX"] > 0:
-            print(f"Loop iteration: {self.registers['ECX']}")
-            self.registers["ECX"] -= 1
+        
+        # Store previous EAX value in EDX (before loop execution)
+        self.registers["EDX"] = self.registers["EAX"]
+        
+        # Simulate the loop
+        loop_counter = iterations
+        while loop_counter > 0:
+            print(f"Loop iteration: {loop_counter}")
+            loop_counter -= 1
+            
+        # Keep ECX at the original number of iterations to display how many loops were played
+        # This way ECX will always show the number of loops that were requested
 
     def load_from_memory(self, offset):
         """Simulate loading a value from memory using EBX as a base address."""
@@ -71,6 +89,8 @@ class CPU:
     def return_from_function(self):
         """Simulate returning from a function."""
         if self.stack:
+            # Store previous EAX value in EDX
+            self.registers["EDX"] = self.registers["EAX"]
             self.stack[-1].inactive = True
             # Update EAX with the return address or any other value
             self.registers["EAX"] = self.stack[-1].return_address
